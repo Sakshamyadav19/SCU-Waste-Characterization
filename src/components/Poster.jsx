@@ -16,17 +16,23 @@ export default function Poster() {
     fetch('/assign2_25S_wastedata.csv')
       .then(r => r.text())
       .then(txt => {
-        setData(csvParse(txt, d => ({
-          year: +d.Year,
-          month: d.Month,
-          category: d.Category,
-          weight: +d['Weight (lbs)'].replace(/,/g, ''),
-          event: `${d.Month} ${d.Year}`,
-        })));
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to load data", err);
+        const rows = csvParse(txt, d => {
+          const raw = d.Category?.trim().toLowerCase();
+          let category = null;
+          if (raw === 'recycle') category = 'Recycle';
+          if (raw === 'compost') category = 'Compost';
+          if (raw === 'landfill') category = 'Landfill';
+          if (!category) return null;               // drop everything else
+          return {
+            year: +d.Year,
+            month: d.Month,
+            category,
+            weight: +d['Weight (lbs)'].replace(/,/g, ''),
+            event: `${d.Month} ${d.Year}`,
+          };
+        }).filter(d => d !== null);
+
+        setData(rows);
         setLoading(false);
       });
   }, []);
@@ -63,17 +69,17 @@ export default function Poster() {
         <p className="mt-3 text-lg sm:text-xl text-gray-700">
           Tracking Our Journey Toward Campus Sustainability
         </p>
-        
+
         {/* SUMMARY STATS BANNER */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {categories.map(cat => {
             const percentage = totalWeight ? ((categoryTotals[cat] / totalWeight) * 100).toFixed(1) : 0;
-            const colorClass = cat === 'Recycle' ? 'bg-green-600' : 
-                              cat === 'Compost' ? 'bg-yellow-500' : 'bg-red-600';
-            
+            const colorClass = cat === 'Recycle' ? 'bg-green-600' :
+              cat === 'Compost' ? 'bg-yellow-500' : 'bg-red-600';
+
             return (
-              <div key={cat} className="bg-white rounded-xl shadow-lg p-4 border-t-4 border-b-4 border-opacity-75 transform hover:scale-105 transition-transform duration-300" style={{borderColor: cat === 'Recycle' ? '#2F855A' : cat === 'Compost' ? '#F6E05E' : '#E53E3E'}}>
-                <h3 className="text-xl font-bold mb-2" style={{color: cat === 'Recycle' ? '#2F855A' : cat === 'Compost' ? '#B7791F' : '#C53030'}}>{cat}</h3>
+              <div key={cat} className="bg-white rounded-xl shadow-lg p-4 border-t-4 border-b-4 border-opacity-75 transform hover:scale-105 transition-transform duration-300" style={{ borderColor: cat === 'Recycle' ? '#2F855A' : cat === 'Compost' ? '#F6E05E' : '#E53E3E' }}>
+                <h3 className="text-xl font-bold mb-2" style={{ color: cat === 'Recycle' ? '#2F855A' : cat === 'Compost' ? '#B7791F' : '#C53030' }}>{cat}</h3>
                 <div className="flex justify-between items-center">
                   <span className="text-2xl font-bold">{percentage}%</span>
                   <span className="text-gray-600">{Math.round(categoryTotals[cat]).toLocaleString()} lbs</span>
@@ -139,15 +145,15 @@ export default function Poster() {
 
         {/* KPI SECTION - Key insights in small boxes */}
         <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-          <KPIBox 
-            title="Total Waste" 
-            data={data} 
-            calc={(d) => `${Math.round(d.reduce((s, i) => s + i.weight, 0)).toLocaleString()} lbs`} 
-            color="green-600" 
+          <KPIBox
+            title="Total Waste"
+            data={data}
+            calc={(d) => `${Math.round(d.reduce((s, i) => s + i.weight, 0)).toLocaleString()} lbs`}
+            color="green-600"
           />
-          <KPIBox 
-            title="Peak Waste Month" 
-            data={data} 
+          <KPIBox
+            title="Peak Waste Month"
+            data={data}
             calc={(d) => {
               const months = {};
               d.forEach(item => {
@@ -156,27 +162,27 @@ export default function Poster() {
               const max = Object.entries(months).reduce((m, c) => c[1] > m[1] ? c : m);
               return max[0];
             }}
-            color="yellow-500" 
+            color="yellow-500"
           />
-          <KPIBox 
-            title="Diversion Rate" 
-            data={data} 
+          <KPIBox
+            title="Diversion Rate"
+            data={data}
             calc={(d) => {
               const recycle = d.filter(i => i.category === 'Recycle').reduce((s, i) => s + i.weight, 0);
               const compost = d.filter(i => i.category === 'Compost').reduce((s, i) => s + i.weight, 0);
               const total = d.reduce((s, i) => s + i.weight, 0);
               return `${Math.round(((recycle + compost) / total) * 100)}%`;
             }}
-            color="green-600" 
+            color="green-600"
           />
-          <KPIBox 
-            title="Most Recent Year" 
-            data={data} 
+          <KPIBox
+            title="Most Recent Year"
+            data={data}
             calc={(d) => {
               const years = [...new Set(d.map(i => i.year))];
               return Math.max(...years);
             }}
-            color="green-700" 
+            color="green-700"
           />
         </div>
       </div>

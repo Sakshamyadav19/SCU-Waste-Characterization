@@ -32,7 +32,7 @@ export default function YearlyBreakdown({ data }) {
   // Get unique years and categories
   const years = [...new Set(data.map(d => d.year))].sort();
   const cats = [...new Set(data.map(d => d.category))];
-  const [year, setYear] = useState(years.at(-1)); // Start with most recent year
+  const [year, setYear] = useState(years.at(-2)); // Start with most recent year
   
   // Filter data for selected year and prepare for pie chart
   const slice = data.filter(d => d.year === year);
