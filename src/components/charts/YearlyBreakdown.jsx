@@ -115,11 +115,11 @@ export default function YearlyBreakdown({ data }) {
         {pieData.map(item => (
           <div 
             key={item.name} 
-            className="p-2 rounded bg-gray-50 border-t-2" 
+            className="p-2 rounded bg-gray-50 border-t-2 fontsize-lg" 
             style={{ borderColor: COLORS[item.name] }}
           >
-            <div className="text-xs text-gray-500">{item.name}</div>
-            <div className="font-bold text-sm" style={{ color: COLORS[item.name] }}>
+            <div className="text-xl text-gray-500">{item.name}</div>
+            <div className="text-lg font-extrabold" style={{ color: COLORS[item.name] }}>
               {item.percentage}
             </div>
           </div>
